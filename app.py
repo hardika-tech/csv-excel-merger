@@ -26,11 +26,6 @@ st.write(
     "Merge multiple CSV and Excel files into a single Excel workbook."
 )
 
-st.info(
-    "💡 Tip: For best performance on Render Free, "
-    "try to keep the total upload size below approximately 200 MB."
-)
-
 st.divider()
 
 # --------------------------------------------------
@@ -56,7 +51,6 @@ if uploaded_files:
     for file in uploaded_files:
 
         size_mb = file.size / (1024 * 1024)
-
         total_size += file.size
 
         st.write(
@@ -73,7 +67,6 @@ if uploaded_files:
     st.divider()
 
     progress = st.progress(0)
-
     status = st.empty()
 
     start_time = time.time()
@@ -81,8 +74,6 @@ if uploaded_files:
     try:
 
         with st.spinner("Processing files..."):
-
-            st.write("✅ Step 1: Starting merge...")
 
             output, summary = merge_files(
                 uploaded_files,
@@ -94,20 +85,10 @@ if uploaded_files:
                 )
             )
 
-            st.write("✅ Step 2: merge_files() completed")
-
-            st.write(f"Output Type: {type(output)}")
-
-            st.write(
-                f"Output Size: {output.getbuffer().nbytes:,} bytes"
-            )
-
         elapsed = time.time() - start_time
 
         progress.empty()
         status.empty()
-
-        st.write("✅ Step 3: Merge finished")
 
         st.success("✅ Files merged successfully!")
 
@@ -137,8 +118,6 @@ if uploaded_files:
 
         st.write("")
 
-        st.write("✅ Step 4: Creating download button")
-
         st.download_button(
             label="⬇ Download Merged Excel",
             data=output,
@@ -147,8 +126,6 @@ if uploaded_files:
             use_container_width=True
         )
 
-        st.write("✅ Step 5: Download button created")
-
     except Exception as e:
 
         progress.empty()
@@ -156,17 +133,13 @@ if uploaded_files:
 
         st.error("❌ Merge Failed")
 
-        st.write("## Exception")
         st.code(str(e))
 
-        st.write("## Full Traceback")
-        st.code(traceback.format_exc())
+        with st.expander("View Full Error Details"):
+            st.code(traceback.format_exc())
 
-        # Also print to Render logs
+        # Print to logs for debugging
         print(traceback.format_exc())
-
-        # Re-raise so Render captures the error
-        raise
 
 # --------------------------------------------------
 # Footer

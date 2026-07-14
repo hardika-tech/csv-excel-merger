@@ -26,6 +26,7 @@ def read_csv_file(file):
     """
 
     try:
+
         file.seek(0)
 
         return pd.read_csv(
@@ -85,6 +86,7 @@ def merge_files(uploaded_files, progress_callback=None):
     for index, file in enumerate(uploaded_files):
 
         if progress_callback:
+
             progress = int(((index + 1) / total_files) * 100)
 
             progress_callback(
@@ -101,7 +103,9 @@ def merge_files(uploaded_files, progress_callback=None):
                 df = read_excel_file(file)
 
             else:
-                raise Exception(f"Unsupported file type: {file.name}")
+                raise Exception(
+                    f"Unsupported file type: {file.name}"
+                )
 
         except Exception as e:
 
@@ -116,19 +120,18 @@ def merge_files(uploaded_files, progress_callback=None):
     # Merge All Files
     # ----------------------------------------
 
-    print(">>> Before concat")
-
     if len(dataframes) == 1:
+
         merged_df = dataframes[0]
+
     else:
+
         merged_df = pd.concat(
             dataframes,
             ignore_index=True,
             sort=False,
             copy=False
         )
-
-    print(">>> After concat")
 
     dataframes.clear()
     del dataframes
@@ -148,34 +151,22 @@ def merge_files(uploaded_files, progress_callback=None):
                 utc=False
             )
 
-    print(">>> After datetime formatting")
-
     # ----------------------------------------
-    # Create Excel File (DEBUG VERSION)
+    # Create Excel File
     # ----------------------------------------
-
-    print(">>> Before creating BytesIO")
 
     output = BytesIO()
-
-    print(">>> Before ExcelWriter")
 
     with pd.ExcelWriter(
         output,
         engine="openpyxl"
     ) as writer:
 
-        print(">>> Before to_excel")
-
         merged_df.to_excel(
             writer,
             sheet_name="Merged Data",
             index=False
         )
-
-        print(">>> After to_excel")
-
-    print(">>> After ExcelWriter")
 
     # ----------------------------------------
     # Prepare Summary
