@@ -1,4 +1,5 @@
 import time
+import traceback
 
 import streamlit as st
 
@@ -104,7 +105,6 @@ if uploaded_files:
         elapsed = time.time() - start_time
 
         progress.empty()
-
         status.empty()
 
         st.write("✅ Step 3: Merge finished")
@@ -152,12 +152,21 @@ if uploaded_files:
     except Exception as e:
 
         progress.empty()
-
         status.empty()
 
-        st.error("❌ Unable to merge the uploaded files.")
+        st.error("❌ Merge Failed")
 
-        st.exception(e)
+        st.write("## Exception")
+        st.code(str(e))
+
+        st.write("## Full Traceback")
+        st.code(traceback.format_exc())
+
+        # Also print to Render logs
+        print(traceback.format_exc())
+
+        # Re-raise so Render captures the error
+        raise
 
 # --------------------------------------------------
 # Footer
