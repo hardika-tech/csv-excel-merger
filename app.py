@@ -59,8 +59,7 @@ if uploaded_files:
         total_size += file.size
 
         st.write(
-            f"📄 **{file.name}** &nbsp;&nbsp;&nbsp; "
-            f"`{size_mb:.2f} MB`"
+            f"📄 **{file.name}**   `{size_mb:.2f} MB`"
         )
 
     st.write("")
@@ -82,12 +81,24 @@ if uploaded_files:
 
         with st.spinner("Processing files..."):
 
+            st.write("✅ Step 1: Starting merge...")
+
             output, summary = merge_files(
                 uploaded_files,
                 progress_callback=lambda value, text: (
                     progress.progress(value),
-                    status.markdown(f"**{value}% Complete**  \n{text}")
+                    status.markdown(
+                        f"**{value}% Complete**  \n{text}"
+                    )
                 )
+            )
+
+            st.write("✅ Step 2: merge_files() completed")
+
+            st.write(f"Output Type: {type(output)}")
+
+            st.write(
+                f"Output Size: {output.getbuffer().nbytes:,} bytes"
             )
 
         elapsed = time.time() - start_time
@@ -95,6 +106,8 @@ if uploaded_files:
         progress.empty()
 
         status.empty()
+
+        st.write("✅ Step 3: Merge finished")
 
         st.success("✅ Files merged successfully!")
 
@@ -124,6 +137,8 @@ if uploaded_files:
 
         st.write("")
 
+        st.write("✅ Step 4: Creating download button")
+
         st.download_button(
             label="⬇ Download Merged Excel",
             data=output,
@@ -131,6 +146,8 @@ if uploaded_files:
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             use_container_width=True
         )
+
+        st.write("✅ Step 5: Download button created")
 
     except Exception as e:
 
