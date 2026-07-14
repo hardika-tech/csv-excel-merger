@@ -26,7 +26,6 @@ def read_csv_file(file):
     """
 
     try:
-
         file.seek(0)
 
         return pd.read_csv(
@@ -70,36 +69,22 @@ def merge_files(uploaded_files, progress_callback=None):
     """
     Merge uploaded CSV/XLSX files into
     a single Excel workbook.
-
-    Returns
-    -------
-    BytesIO
-        Excel file
-
-    dict
-        Summary statistics
     """
 
     if not uploaded_files:
-
         raise Exception("No files uploaded.")
 
     total_files = len(uploaded_files)
-
     total_rows = 0
-
     dataframes = []
 
-    merged_df = None
-
-        # ----------------------------------------
+    # ----------------------------------------
     # Read Every Uploaded File
     # ----------------------------------------
 
     for index, file in enumerate(uploaded_files):
 
         if progress_callback:
-
             progress = int(((index + 1) / total_files) * 100)
 
             progress_callback(
@@ -110,18 +95,13 @@ def merge_files(uploaded_files, progress_callback=None):
         try:
 
             if file.name.lower().endswith(".csv"):
-
                 df = read_csv_file(file)
 
             elif file.name.lower().endswith(".xlsx"):
-
                 df = read_excel_file(file)
 
             else:
-
-                raise Exception(
-                    f"Unsupported file type: {file.name}"
-                )
+                raise Exception(f"Unsupported file type: {file.name}")
 
         except Exception as e:
 
@@ -130,19 +110,17 @@ def merge_files(uploaded_files, progress_callback=None):
             )
 
         total_rows += len(df)
-
         dataframes.append(df)
 
     # ----------------------------------------
     # Merge All Files
     # ----------------------------------------
 
+    print(">>> Before concat")
+
     if len(dataframes) == 1:
-
         merged_df = dataframes[0]
-
     else:
-
         merged_df = pd.concat(
             dataframes,
             ignore_index=True,
@@ -150,14 +128,10 @@ def merge_files(uploaded_files, progress_callback=None):
             copy=False
         )
 
-    # ----------------------------------------
-    # Free DataFrame List Memory
-    # ----------------------------------------
+    print(">>> After concat")
 
     dataframes.clear()
-
     del dataframes
-
     gc.collect()
 
     # ----------------------------------------
@@ -174,21 +148,24 @@ def merge_files(uploaded_files, progress_callback=None):
                 utc=False
             )
 
+    print(">>> After datetime formatting")
+
     # ----------------------------------------
-    # Create Excel File
+    # Create Excel File (DEBUG VERSION)
     # ----------------------------------------
+
+    print(">>> Before creating BytesIO")
 
     output = BytesIO()
 
+    print(">>> Before ExcelWriter")
+
     with pd.ExcelWriter(
         output,
-        engine="xlsxwriter",
-        engine_kwargs={
-        "options": {
-            "strings_to_urls": False
-        }
-    }
+        engine="openpyxl"
     ) as writer:
+
+        print(">>> Before to_excel")
 
         merged_df.to_excel(
             writer,
@@ -196,76 +173,23 @@ def merge_files(uploaded_files, progress_callback=None):
             index=False
         )
 
-        workbook = writer.book
+        print(">>> After to_excel")
 
-        worksheet = writer.sheets["Merged Data"]
-
-                # ----------------------------------------
-        # Freeze Header Row
-        # ----------------------------------------
-
-        worksheet.freeze_panes(1, 0)
-
-        # ----------------------------------------
-        # Enable Filters
-        # ----------------------------------------
-
-        worksheet.autofilter(
-            0,
-            0,
-            len(merged_df),
-            len(merged_df.columns) - 1
-        )
-
-        # ----------------------------------------
-        # Auto Column Width
-        # ----------------------------------------
-
-        for col_num, column in enumerate(merged_df.columns):
-
-            try:
-
-                max_length = max(
-                    merged_df[column].astype(str).str.len().max(),
-                    len(column)
-                )
-
-            except Exception:
-
-                max_length = len(column)
-
-            worksheet.set_column(
-                col_num,
-                col_num,
-                min(max_length + 2, 40)
-            )
+    print(">>> After ExcelWriter")
 
     # ----------------------------------------
     # Prepare Summary
     # ----------------------------------------
 
     summary = {
-
         "files": total_files,
-
         "rows_imported": total_rows,
-
         "rows_output": len(merged_df)
-
     }
 
-    # ----------------------------------------
-    # Cleanup Memory
-    # ----------------------------------------
-
     del merged_df
-
     gc.collect()
 
     output.seek(0)
-
-    # ----------------------------------------
-    # Return
-    # ----------------------------------------
 
     return output, summary
